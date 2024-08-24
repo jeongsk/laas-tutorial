@@ -64,10 +64,11 @@ def main():
 
         # 챗봇 응답
         with st.chat_message("assistant"):
+            container = st.empty()
             with st.spinner("챗봇이 응답하는 중..."):
                 response = make_laas_api_request(st.session_state.messages)
                 if response:
-                    st.markdown(response)
+                    container.markdown(response)
                     # 챗봇 응답 저장
                     add_message(st.session_state.messages, "assistant", response)
                 else:
