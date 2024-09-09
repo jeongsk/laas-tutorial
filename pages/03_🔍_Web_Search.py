@@ -52,7 +52,8 @@ def add_message(
     content: str,
     tool_call_id: Optional[str] = None,
 ):
-    messages.append({"role": role, "content": content, "tool_call_id": tool_call_id})
+    messages.append({"role": role, "content": content,
+                    "tool_call_id": tool_call_id})
     if len(messages) > MAX_MESSAGES:
         messages.pop(0)
 
@@ -65,7 +66,8 @@ def tavily_search(query: str) -> str:
 
         return "\n\n".join(
             [
-                f"제목: {result['title']}\n링크: {result['url']}\n내용: {result['content']}"
+                f"제목: {result['title']}\n링크: {
+                    result['url']}\n내용: {result['content']}"
                 for result in top_results
             ]
         )
@@ -80,7 +82,7 @@ def handle_tool_calls(tool_calls, info_placeholder):
         if call["function"]["name"] == "search":
             arguments = json.loads(call["function"]["arguments"])
             query = arguments.get("query", "")
-            info_placeholder.info(f"🔍 검색 중...\n\n검색 쿼리: {query}")
+            info_placeholder.info(f"🔍 '{query}' 검색 중...")
             search_result = tavily_search(query)
             results.append((call["id"], search_result))
     return results
@@ -102,10 +104,17 @@ def process_user_input(user_input: str, messages: List[Dict]):
                     tool_results = handle_tool_calls(
                         message["tool_calls"], info_placeholder
                     )
-                    messages.append(message)
-                    for tool_call_id, search_result in tool_results:
-                        add_message(messages, "tool", search_result, tool_call_id)
-                    response = make_laas_api_request(messages)
+                    tool_messages = [
+                        {"role": "user", "content": user_input},
+                        message
+                    ]
+                    for tool_call_id, tool_result in tool_results:
+                        tool_messages.append({
+                            "role": "tool",
+                            "content": tool_result,
+                            "tool_call_id": tool_call_id
+                        })
+                    response = make_laas_api_request(tool_messages)
                     content = response["choices"][0]["message"].get("content")
                     container.markdown(content)
                     add_message(messages, "assistant", content)
