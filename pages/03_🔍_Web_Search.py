@@ -101,13 +101,13 @@ def process_user_input(user_input: str, messages: List[Dict]):
             if response:
                 message = response["choices"][0]["message"]
                 if message.get("tool_calls"):
-                    tool_results = handle_tool_calls(
-                        message["tool_calls"], info_placeholder
-                    )
                     tool_messages = [
                         {"role": "user", "content": user_input},
                         message
                     ]
+                    tool_results = handle_tool_calls(
+                        message["tool_calls"], info_placeholder
+                    )
                     for tool_call_id, tool_result in tool_results:
                         tool_messages.append({
                             "role": "tool",
@@ -149,15 +149,16 @@ def main():
     if messages_key not in st.session_state:
         st.session_state[messages_key] = []
 
-    for message in st.session_state[messages_key]:
-        if message["role"] in ["user", "assistant"] and message["content"] is not None:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+    messages = st.session_state[messages_key]
+
+    for message in messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
     user_input = st.chat_input("질문을 입력하세요:")
 
     if user_input:
-        process_user_input(user_input, st.session_state[messages_key])
+        process_user_input(user_input, messages)
 
 
 if __name__ == "__main__":
