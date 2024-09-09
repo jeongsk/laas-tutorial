@@ -76,16 +76,24 @@ def tavily_search(query: str) -> str:
         return f"검색 중 오류가 발생했습니다: {str(e)}"
 
 
-def handle_tool_calls(tool_calls, info_placeholder):
-    results = []
-    for call in tool_calls:
+def handle_tool_calls(user_input: str, message: Dict, info_placeholder: st.empty):
+    tool_messages = [
+        {"role": "user", "content": user_input},
+        message
+    ]
+    for call in message["tool_calls"]:
         if call["function"]["name"] == "search":
             arguments = json.loads(call["function"]["arguments"])
             query = arguments.get("query", "")
             info_placeholder.info(f"🔍 '{query}' 검색 중...")
             search_result = tavily_search(query)
-            results.append((call["id"], search_result))
-    return results
+            tool_messages.append({
+                "role": "tool",
+                "content": search_result,
+                "tool_call_id": call["id"]
+            })
+    response = make_laas_api_request(tool_messages)
+    return response["choices"][0]["message"].get("content") if response else None
 
 
 def process_user_input(user_input: str, messages: List[Dict]):
@@ -101,23 +109,13 @@ def process_user_input(user_input: str, messages: List[Dict]):
             if response:
                 message = response["choices"][0]["message"]
                 if message.get("tool_calls"):
-                    tool_messages = [
-                        {"role": "user", "content": user_input},
-                        message
-                    ]
-                    tool_results = handle_tool_calls(
-                        message["tool_calls"], info_placeholder
-                    )
-                    for tool_call_id, tool_result in tool_results:
-                        tool_messages.append({
-                            "role": "tool",
-                            "content": tool_result,
-                            "tool_call_id": tool_call_id
-                        })
-                    response = make_laas_api_request(tool_messages)
-                    content = response["choices"][0]["message"].get("content")
-                    container.markdown(content)
-                    add_message(messages, "assistant", content)
+                    content = handle_tool_calls(
+                        user_input, message, info_placeholder)
+                    if content:
+                        container.markdown(content)
+                        add_message(messages, "assistant", content)
+                    else:
+                        st.error("검색 중에 오류가 발생했습니다.")
                 elif message.get("content"):
                     container.markdown(message["content"])
                     add_message(messages, "assistant", message["content"])
