@@ -6,7 +6,7 @@ authors = ["jeongsk <jeongseok@wantedlab.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.11.9"
+python = "3.12.5"
 langchain-community = "^0.2.12"
 streamlit = "^1.37.1"
 youtube-transcript-api = "^0.6.2"
