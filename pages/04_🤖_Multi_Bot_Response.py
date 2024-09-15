@@ -33,6 +33,21 @@ st.set_page_config(
 )
 st.title("3개의 AI 모델 응답 비교")
 
+# CSS 스타일 정의
+st.markdown(
+    """
+<style>
+    .response-box {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
 
 async def get_responses(user_input):
     tasks = [
@@ -48,7 +63,7 @@ def on_input_change():
 
 
 user_input = st.text_input(
-    "질문:",
+    "",
     key="user_input",
     on_change=on_input_change,
     placeholder="질문을 입력하세요...",
@@ -58,7 +73,6 @@ if "input_submitted" not in st.session_state:
     st.session_state.input_submitted = False
 
 if st.session_state.input_submitted:
-
     if user_input:
         col1, col2, col3 = st.columns(3)
         with st.spinner("응답 작성 중..."):
@@ -67,15 +81,36 @@ if st.session_state.input_submitted:
             responses = asyncio.run(get_responses(user_input))
 
             with col1:
-                st.markdown("##### 🤖 GPT-4o")
-                st.markdown(responses[0])
+                st.markdown("##### GPT-4o")
+                st.markdown(
+                    f"""
+                <div class="response-box">
+                    {responses[0]}
+                </div>
+                """,
+                    unsafe_allow_html=True,
+                )
 
             with col2:
-                st.markdown("##### 🤖 Claude-3.5-Sonnet")
-                st.markdown(responses[1])
+                st.markdown("##### Claude-3.5-Sonnet")
+                st.markdown(
+                    f"""
+                <div class="response-box">
+                    {responses[1]}
+                </div>
+                """,
+                    unsafe_allow_html=True,
+                )
 
             with col3:
-                st.markdown("##### 🤖 Gemini-1.5-Pro")
-                st.markdown(responses[2])
+                st.markdown("##### Gemini-1.5-Pro")
+                st.markdown(
+                    f"""
+                <div class="response-box">
+                    {responses[2]}
+                </div>
+                """,
+                    unsafe_allow_html=True,
+                )
     else:
         st.warning("질문을 입력해주세요.")
