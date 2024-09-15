@@ -28,10 +28,10 @@ google_gemini_api = LaasChatAPI(
 )
 
 # 페이지 설정
-st.set_page_config(page_title="🤖 3개의 AI 모델 응답 비교", page_icon="🤖")
+st.set_page_config(
+    page_title="🤖 3개의 AI 모델 응답 비교", page_icon="🤖", layout="wide"
+)
 st.title("3개의 AI 모델 응답 비교")
-
-user_input = st.text_input("질문을 입력하세요:")
 
 
 async def get_responses(user_input):
@@ -43,25 +43,39 @@ async def get_responses(user_input):
     return await asyncio.gather(*tasks)
 
 
-if st.button("응답 받기"):
-    col1, col2, col3 = st.columns(3)
+def on_input_change():
+    st.session_state.input_submitted = True
+
+
+user_input = st.text_input(
+    "질문:",
+    key="user_input",
+    on_change=on_input_change,
+    placeholder="질문을 입력하세요...",
+)
+
+if "input_submitted" not in st.session_state:
+    st.session_state.input_submitted = False
+
+if st.session_state.input_submitted:
 
     if user_input:
+        col1, col2, col3 = st.columns(3)
         with st.spinner("응답 작성 중..."):
 
             # 비동기 요청 실행
             responses = asyncio.run(get_responses(user_input))
 
             with col1:
-                st.subheader("OpenAI/GPT-4o")
-                st.write(responses[0])
+                st.markdown("##### 🤖 GPT-4o")
+                st.markdown(responses[0])
 
             with col2:
-                st.subheader("Anthropic/Claude-3.5-Sonnet")
-                st.write(responses[1])
+                st.markdown("##### 🤖 Claude-3.5-Sonnet")
+                st.markdown(responses[1])
 
             with col3:
-                st.subheader("Google/Gemini-1.5-Pro")
-                st.write(responses[2])
+                st.markdown("##### 🤖 Gemini-1.5-Pro")
+                st.markdown(responses[2])
     else:
         st.warning("질문을 입력해주세요.")
