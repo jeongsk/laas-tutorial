@@ -103,8 +103,8 @@ def process_user_input(user_input: str, messages: List[Dict]):
 
     with st.chat_message("assistant"):
         container = st.empty()
-        info_placeholder = st.empty()
         with st.spinner("AI가 응답을 생성 중..."):
+            info_placeholder = st.empty()
             response = make_laas_api_request(messages)
             if response:
                 message = response["choices"][0]["message"]
