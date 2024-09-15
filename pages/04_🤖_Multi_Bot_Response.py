@@ -44,22 +44,24 @@ async def get_responses(user_input):
 
 
 if st.button("응답 받기"):
+    col1, col2, col3 = st.columns(3)
+
     if user_input:
-        col1, col2, col3 = st.columns(3)
+        with st.spinner("응답 작성 중..."):
 
-        # 비동기 요청 실행
-        responses = asyncio.run(get_responses(user_input))
+            # 비동기 요청 실행
+            responses = asyncio.run(get_responses(user_input))
 
-        with col1:
-            st.subheader("OpenAI/GPT-4o")
-            st.write(responses[0])
+            with col1:
+                st.subheader("OpenAI/GPT-4o")
+                st.write(responses[0])
 
-        with col2:
-            st.subheader("Anthropic/Claude-3.5-Sonnet")
-            st.write(responses[1])
+            with col2:
+                st.subheader("Anthropic/Claude-3.5-Sonnet")
+                st.write(responses[1])
 
-        with col3:
-            st.subheader("Google/Gemini-1.5-Pro")
-            st.write(responses[2])
+            with col3:
+                st.subheader("Google/Gemini-1.5-Pro")
+                st.write(responses[2])
     else:
         st.warning("질문을 입력해주세요.")
