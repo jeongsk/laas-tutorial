@@ -12,7 +12,9 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip3 install jupyter ipykernel poetry && poetry install && poetry shell",
+  "postCreateCommand": "pip3 install jupyter ipykernel poetry",
+  "postStartCommand": "poetry install -vvv && poetry shell",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
 	// Configure tool-specific properties.
 	"customizations": {
@@ -22,7 +24,7 @@
 				"ms-toolsai.jupyter"
 			]
 		}
-	},
+	}
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
