@@ -3,6 +3,7 @@ import os
 from typing import Dict, List, Optional, Any
 
 import requests
+import aiohttp
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -52,9 +53,21 @@ class LaasChatAPI:
             logger.error(f"API request error: {str(e)}")
             raise
 
-    def send_chat_request(self, messages: List[Dict]) -> Dict[str, Any]:
-        logger.info(f"Chat request messages: {messages}")
+    async def _send_api_request_async(
+        self, url: str, headers: Dict, json_data: Dict
+    ) -> Dict[str, Any]:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    url, headers=headers, json=json_data
+                ) as response:
+                    response.raise_for_status()
+                    return await response.json()
+        except aiohttp.ClientError as e:
+            logger.error(f"Async API request error: {str(e)}")
+            raise
 
+    def _get_request_body(self, messages: List[str]) -> List[Dict[str, Any]]:
         json_data = {
             "hash": self.hash,
             "messages": messages,
@@ -69,14 +82,27 @@ class LaasChatAPI:
         if self.params:
             json_data["params"] = self.params
 
-        print(
-            {"project": self.project, "apikey": self.api_key},
-            json_data,
-        )
+        return json_data
+
+    def send_chat_request(self, messages: List[Dict]) -> Dict[str, Any]:
+        logger.info(f"Chat request messages: {messages}")
+
         json_response = self._send_api_request(
             self.api_url,
             {"project": self.project, "apikey": self.api_key},
-            json_data,
+            self._get_request_body(messages),
+        )
+        if json_response:
+            logger.info(f"API response: {json_response}")
+        return json_response
+
+    def send_chat_request_async(self, messages: List[Dict]) -> Dict[str, Any]:
+        logger.info(f"Chat request messages: {messages}")
+
+        json_response = self._send_api_request_async(
+            self.api_url,
+            {"project": self.project, "apikey": self.api_key},
+            self._get_request_body(messages),
         )
         if json_response:
             logger.info(f"API response: {json_response}")
@@ -92,4 +118,19 @@ class LaasChatAPI:
             return response["choices"][0]["message"]["content"]
         except Exception as e:
             logger.error(f"Error in send_message_request: {str(e)}")
+            raise
+
+    async def send_message_request_async(self, query: str, **kwargs) -> str:
+        try:
+            logger.info(f"Sending message request: {query}")
+            response = await self.send_chat_request_async(
+                [{"role": "user", "content": query}], **kwargs
+            )
+            logger.info("Message request sent successfully")
+            return response["choices"][0]["message"]["content"]
+        except asyncio.TimeoutError:
+            logger.error("Async request timed out")
+            raise
+        except Exception as e:
+            logger.error(f"Error in send_message_request_async: {str(e)}")
             raise
